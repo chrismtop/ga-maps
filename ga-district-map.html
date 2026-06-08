@@ -21868,7 +21868,7 @@
     polygon.on('mouseover', function() { polygon.setStyle({ fillOpacity: 0.55 }); });
     polygon.on('mouseout', function() { polygon.setStyle({ fillOpacity: 0.35 }); });
 
-    map.fitBounds(polygon.getBounds(], { padding: [40, 40] });
+    map.fitBounds(polygon.getBounds(), { padding: [40, 40] });
   }
 
   var s = document.createElement('script');
