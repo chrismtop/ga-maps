@@ -21832,31 +21832,22 @@
     document.getElementById('map').innerHTML =
       '<div style="color:#e8f4fd;font-family:Georgia,serif;font-size:16px;text-align:center;padding:40px;">' + msg + '</div>';
   }
- 
-  function ringToLatLngs(ring) {
-    return ring.map(function(pt) { return [-pt[1], pt[0]]; });
-  }
- 
-  function geometryToLatLngs(geometry) {
-    if (geometry.type === 'Polygon') return geometry.coordinates.map(ringToLatLngs);
-    if (geometry.type === 'MultiPolygon') return geometry.coordinates.map(function(poly) {
-      return poly.map(ringToLatLngs);
-    });
-    return null;
-  }
- 
+
   function initMap() {
     var params = new URLSearchParams(window.location.search);
-    var districtNum = parseInt(params.get('district') || Object.keys(DISTRICTS)[0], 10);
- 
+    var districtNum = parseInt(params.get('district') || '6', 10);
+
     document.getElementById('dlabel').textContent = districtNum;
- 
-    var data = DISTRICTS[districtNum];
-    if (!data || !data.features || data.features.length === 0) {
-      showError('No data loaded for District ' + districtNum + '.');
+
+    var coords = DISTRICTS[districtNum];
+    if (!coords || coords.length === 0) {
+      showError('No coordinates loaded for District ' + districtNum + '.');
       return;
     }
- 
+
+    // Flip y-axis: SVG y increases downward, Leaflet expects upward
+    var latlngs = coords.map(function(pt) { return [-pt[1], pt[0]]; });
+
     var map = L.map('map', {
       crs: L.CRS.Simple,
       zoomControl: false,
@@ -21865,41 +21856,21 @@
       dragging: true,
       doubleClickZoom: false
     });
- 
-    // Show pixel coordinates on mouse move
-    // Leaflet Simple CRS stores latlng as [-y, x], so we reverse that
-    map.on('mousemove', function(e) {
-      var x = e.latlng.lng.toFixed(2);
-      var y = (-e.latlng.lat).toFixed(2);
-      document.getElementById('coord-display').textContent = 'x: ' + x + '   y: ' + y;
-    });
- 
-    var allLayers = [];
- 
-    data.features.forEach(function(feature) {
-      var latlngs = geometryToLatLngs(feature.geometry);
-      if (!latlngs) return;
- 
-      var layer = L.polygon(latlngs, {
-        color: '#378add', weight: 2, opacity: 1,
-        fillColor: '#378add', fillOpacity: 0.35
-      });
- 
-      layer.on('mouseover', function() { layer.setStyle({ fillOpacity: 0.55 }); });
-      layer.on('mouseout',  function() { layer.setStyle({ fillOpacity: 0.35 }); });
-      layer.addTo(map);
-      allLayers.push(layer);
-    });
- 
-    if (allLayers.length === 0) {
-      showError('Could not render District ' + districtNum + '.');
-      return;
-    }
- 
-    var group = L.featureGroup(allLayers);
-    map.fitBounds(group.getBounds(), { padding: [40, 40] });
+
+    var polygon = L.polygon(latlngs, {
+      color: '#378add',
+      weight: 2,
+      opacity: 1,
+      fillColor: '#378add',
+      fillOpacity: 0.35
+    }).addTo(map);
+
+    polygon.on('mouseover', function() { polygon.setStyle({ fillOpacity: 0.55 }); });
+    polygon.on('mouseout', function() { polygon.setStyle({ fillOpacity: 0.35 }); });
+
+    map.fitBounds(polygon.getBounds(), { padding: [40, 40] });
   }
- 
+
   var s = document.createElement('script');
   s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   s.onload = initMap;
