@@ -21864,13 +21864,13 @@
  
   function initMap() {
     var params = new URLSearchParams(window.location.search);
-    var districtNum = parseInt(params.get('district') || Object.keys(DISTRICTS)[0], 10);
+    var distID = params.get('district') || Object.keys(DISTRICTS)[0];
  
-    document.getElementById('dlabel').textContent = districtNum;
+    document.getElementById('dlabel').textContent = distID;
  
-    var coords = DISTRICTS[districtNum];
+    var coords = DISTRICTS[distID];
     if (!coords || coords.length === 0) {
-      showError('No coordinates loaded for District ' + districtNum + '.');
+      showError('No coordinates loaded for District ' + distID + '.');
       return;
     }
  
