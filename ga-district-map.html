@@ -29,10 +29,27 @@
     z-index: 1000;
     pointer-events: none;
   }
+  #coord-display {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,15,30,0.9);
+    color: #e8f4fd;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 8px 18px;
+    border: 1px solid rgba(55,138,221,0.4);
+    border-radius: 2px;
+    z-index: 1000;
+    pointer-events: none;
+    letter-spacing: 0.05em;
+  }
 </style>
 </head>
 <body>
 <div id="district-label">Georgia — District <span id="dlabel"></span></div>
+<div id="coord-display">Move mouse over map to see coordinates</div>
 <div id="map"></div>
 
 <script>
@@ -21828,26 +21845,23 @@
 
   };
 
-  function showError(msg) {
+    function showError(msg) {
     document.getElementById('map').innerHTML =
       '<div style="color:#e8f4fd;font-family:Georgia,serif;font-size:16px;text-align:center;padding:40px;">' + msg + '</div>';
   }
-
+ 
   function initMap() {
     var params = new URLSearchParams(window.location.search);
-    var districtNum = parseInt(params.get('district') || '6', 10);
-
+    var districtNum = parseInt(params.get('district') || Object.keys(DISTRICTS)[0], 10);
+ 
     document.getElementById('dlabel').textContent = districtNum;
-
+ 
     var coords = DISTRICTS[districtNum];
     if (!coords || coords.length === 0) {
-      showError('No coordinates loaded for District ' + districtNum + '.');
+      showError('No coordinates loaded for District ' + districtNum + '.<br><small>Paste coordinates into the DISTRICTS object in the HTML file.</small>');
       return;
     }
-
-    // Flip y-axis: SVG y increases downward, Leaflet expects upward
-    var latlngs = coords.map(function(pt) { return [-pt[1], pt[0]]; });
-
+ 
     var map = L.map('map', {
       crs: L.CRS.Simple,
       zoomControl: false,
@@ -21856,7 +21870,18 @@
       dragging: true,
       doubleClickZoom: false
     });
-
+ 
+    // Show original pixel coordinates on mouse move
+    // Leaflet Simple CRS stores points as [-y, x], so we reverse
+    map.on('mousemove', function(e) {
+      var x = e.latlng.lng.toFixed(2);
+      var y = (-e.latlng.lat).toFixed(2);
+      document.getElementById('coord-display').textContent = 'x: ' + x + '   y: ' + y;
+    });
+ 
+    // Convert [x, y] pairs to Leaflet [-y, x] latlngs
+    var latlngs = coords.map(function(pt) { return [-pt[1], pt[0]]; });
+ 
     var polygon = L.polygon(latlngs, {
       color: '#378add',
       weight: 2,
@@ -21864,13 +21889,13 @@
       fillColor: '#378add',
       fillOpacity: 0.35
     }).addTo(map);
-
+ 
     polygon.on('mouseover', function() { polygon.setStyle({ fillOpacity: 0.55 }); });
-    polygon.on('mouseout', function() { polygon.setStyle({ fillOpacity: 0.35 }); });
-
+    polygon.on('mouseout',  function() { polygon.setStyle({ fillOpacity: 0.35 }); });
+ 
     map.fitBounds(polygon.getBounds(), { padding: [40, 40] });
   }
-
+ 
   var s = document.createElement('script');
   s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   s.onload = initMap;
