@@ -21847,9 +21847,7 @@
   function initMap() {
     var params = new URLSearchParams(window.location.search);
     var distID = params.get('district') || Object.keys(DISTRICTS)[0];
- 
-    document.getElementById('dlabel').textContent = distID;
- 
+  
     var coords = DISTRICTS[distID];
     if (!coords || coords.length === 0) {
       showError('No coordinates loaded for ' + distID + '.');
