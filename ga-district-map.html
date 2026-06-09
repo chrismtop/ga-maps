@@ -53,6 +53,19 @@
 <div id="map"></div>
 
 <script>
+  // Conversion constants derived from reference points
+  var LAT_SCALE = 0.006042863212616527;
+  var LAT_OFFSET = 29.812696817875086;
+  var LNG_SCALE = 0.0060425899280576135;
+  var LNG_OFFSET = -85.61114246906476;
+ 
+  function toLatLng(x, y) {
+    return [
+      LAT_SCALE * x + LAT_OFFSET,
+      LNG_SCALE * y + LNG_OFFSET
+    ];
+  }
+  
   var DISTRICTS = {
     154: [
       [360.61, 89.85],
@@ -21858,29 +21871,32 @@
  
     var coords = DISTRICTS[districtNum];
     if (!coords || coords.length === 0) {
-      showError('No coordinates loaded for District ' + districtNum + '.<br><small>Paste coordinates into the DISTRICTS object in the HTML file.</small>');
+      showError('No coordinates loaded for District ' + districtNum + '.');
       return;
     }
  
     var map = L.map('map', {
-      crs: L.CRS.Simple,
       zoomControl: false,
       attributionControl: false,
       scrollWheelZoom: true,
       dragging: true,
       doubleClickZoom: false
-    });
+    }).setView([32.5, -83.5], 7);
  
-    // Show original pixel coordinates on mouse move
-    // Leaflet Simple CRS stores points as [-y, x], so we reverse
+    // Dark tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+ 
+    // Show real lat/lng on hover
     map.on('mousemove', function(e) {
-      var x = e.latlng.lng.toFixed(2);
-      var y = (-e.latlng.lat).toFixed(2);
-      document.getElementById('coord-display').textContent = 'x: ' + x + '   y: ' + y;
+      document.getElementById('coord-display').textContent =
+        'lat: ' + e.latlng.lat.toFixed(5) + '   lng: ' + e.latlng.lng.toFixed(5);
     });
  
-    // Convert [x, y] pairs to Leaflet [-y, x] latlngs
-    var latlngs = coords.map(function(pt) { return [-pt[1], pt[0]]; });
+    // Convert pixel coords to real lat/lng
+    var latlngs = coords.map(function(pt) { return toLatLng(pt[0], pt[1]); });
  
     var polygon = L.polygon(latlngs, {
       color: '#378add',
