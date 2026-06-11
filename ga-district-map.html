@@ -34,7 +34,7 @@
 <div id="map"></div>
 
 <script>
-  // Conversion constants derived from reference points
+  // convert svg pixel coords to lat/lng
   var LAT_SCALE = 0.006042863212616527;
   var LAT_OFFSET = 29.812696817875086;
   var LNG_SCALE = 0.0060425899280576135;
@@ -21862,7 +21862,7 @@
       doubleClickZoom: false
     }).setView([32.5, -83.5], 7);
  
-    // Light tile layer with street and city labels
+    // Map base layer
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19
