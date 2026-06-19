@@ -12,8 +12,7 @@
   .leaflet-container { background: #f5f5f5; }
   .leaflet-control-zoom { display: none; }
   .leaflet-control-attribution { display: none; }
-
-  /* ── Popup card ─────────────────────────────────────── */
+ 
   #district-popup {
     display: none;
     position: fixed;
@@ -26,26 +25,26 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     pointer-events: all;
   }
-
+ 
   #district-popup .popup-header {
     background: #378add;
     color: #fff;
     padding: 10px 14px 8px;
   }
-
+ 
   #district-popup .popup-district-id {
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     opacity: 0.85;
   }
-
+ 
   #district-popup .popup-district-name {
     font-size: 15px;
     font-weight: 600;
     margin-top: 2px;
   }
-
+ 
   #district-popup .popup-body {
     padding: 12px 14px 14px;
     display: flex;
@@ -53,7 +52,7 @@
     align-items: center;
     gap: 10px;
   }
-
+ 
   #district-popup .popup-headshot {
     width: 72px;
     height: 72px;
@@ -61,14 +60,14 @@
     object-fit: cover;
     border: 2px solid #e0e8f0;
     background: #e8eef4;
-    /* placeholder appearance when no image loads */
+    /* placeholder appearance */
     display: flex;
     align-items: center;
     justify-content: center;
     color: #aab;
     font-size: 11px;
   }
-
+ 
   #district-popup .popup-headshot-placeholder {
     width: 72px;
     height: 72px;
@@ -83,14 +82,14 @@
     text-align: center;
     line-height: 1.3;
   }
-
+ 
   #district-popup .popup-candidate-name {
     font-size: 14px;
     font-weight: 600;
     color: #1a2a3a;
     text-align: center;
   }
-
+ 
   #district-popup .popup-btn {
     width: 100%;
     padding: 9px 0;
@@ -104,11 +103,11 @@
     letter-spacing: 0.03em;
     transition: background 0.15s;
   }
-
+ 
   #district-popup .popup-btn:hover {
     background: #2a6db5;
   }
-
+ 
   #popup-close {
     position: absolute;
     top: 8px;
@@ -124,16 +123,14 @@
 </style>
 </head>
 <body>
-
-<!-- Popup card -->
+ 
 <div id="district-popup">
   <div class="popup-header">
     <button id="popup-close" onclick="closePopup()">×</button>
-    <div class="popup-district-id" id="popup-id"></div>
     <div class="popup-district-name" id="popup-name"></div>
   </div>
   <div class="popup-body">
-    <!-- Headshot PLACEHOLDER -->
+    <!-- HEADSHOT PLACEHOLDER -->
     <div class="popup-headshot-placeholder" id="popup-headshot">
       Photo<br>goes here
     </div>
@@ -143,7 +140,7 @@
     </button>
   </div>
 </div>
-
+ 
 <div id="map"></div>
 
 <script>
@@ -21977,9 +21974,14 @@
 
   };
 
+// ── Style constants ──────────────────────────────────
   var STYLE_ACTIVE = {
     color: '#378add', weight: 2, opacity: 1,
     fillColor: '#378add', fillOpacity: 0.45
+  };
+  var STYLE_ACTIVE_HOVER = {
+    color: '#2a6db5', weight: 2, opacity: 1,
+    fillColor: '#378add', fillOpacity: 0.65
   };
   var STYLE_INACTIVE = {
     color: '#7a9ab5', weight: 1.5, opacity: 0.7,
@@ -21989,17 +21991,18 @@
     color: '#2a6db5', weight: 2, opacity: 1,
     fillColor: '#a0b8cc', fillOpacity: 0.35
   };
-
+ 
   var activeDistrictID = null;
-
+ 
   function openPopup(distID, latlng, mapObj) {
     activeDistrictID = distID;
     var meta = DISTRICT_META[distID] || {};
-
+ 
     document.getElementById('popup-id').textContent        = distID;
     document.getElementById('popup-name').textContent      = meta.label    || distID;
     document.getElementById('popup-candidate').textContent = meta.candidate || 'Candidate TBD';
-
+ 
+    // headshot, placeholder if no url
     var headshotEl = document.getElementById('popup-headshot');
     if (meta.headshot) {
       headshotEl.outerHTML =
@@ -22014,26 +22017,26 @@
         headshotEl.parentNode.replaceChild(ph, headshotEl);
       }
     }
-
+ 
     var point = mapObj.latLngToContainerPoint(latlng);
     var popup = document.getElementById('district-popup');
     popup.style.display = 'block';
-
+ 
     var pw = 220, ph2 = popup.offsetHeight || 240;
     var vw = window.innerWidth, vh = window.innerHeight;
     var left = Math.min(point.x + 12, vw - pw - 12);
     var top  = Math.min(point.y - 20, vh - ph2 - 12);
     if (top < 8) top = 8;
-
+ 
     popup.style.left = left + 'px';
     popup.style.top  = top  + 'px';
   }
-
+ 
   function closePopup() {
     document.getElementById('district-popup').style.display = 'none';
     activeDistrictID = null;
   }
-
+ 
   function navigateToDistrict() {
     if (!activeDistrictID) return;
     try {
@@ -22049,17 +22052,16 @@
     }
     closePopup();
   }
-
+ 
   function showError(msg) {
     document.getElementById('map').innerHTML =
       '<div style="color:#1a2a3a;font-family:sans-serif;font-size:15px;text-align:center;padding:40px;">' + msg + '</div>';
   }
-
+ 
   function initMap() {
-    // Read active district from URL param
     var params       = new URLSearchParams(window.location.search);
     var activeID     = params.get('district') || '';
-
+ 
     var map = L.map('map', {
       zoomControl: false,
       attributionControl: false,
@@ -22067,39 +22069,39 @@
       dragging: true,
       doubleClickZoom: false
     }).setView([32.5, -83.5], 7);
-
+ 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 19
     }).addTo(map);
-
+ 
     map.on('click', function() { closePopup(); });
-
+ 
     var allLayers = [];
-
+ 
     Object.keys(DISTRICTS).forEach(function(distID) {
       var coords = DISTRICTS[distID];
       if (!coords || coords.length === 0) return;
-
+ 
       var latlngs  = coords.map(function(pt) { return toLatLng(pt[0], pt[1]); });
       var isActive = (distID === activeID);
       var style    = isActive ? STYLE_ACTIVE : STYLE_INACTIVE;
-
+ 
       var polygon = L.polygon(latlngs, style).addTo(map);
-
+ 
       polygon.on('mouseover', function() {
-        if (!isActive) polygon.setStyle(STYLE_HOVER);
+        polygon.setStyle(isActive ? STYLE_ACTIVE_HOVER : STYLE_HOVER);
       });
       polygon.on('mouseout', function() {
-        if (!isActive) polygon.setStyle(STYLE_INACTIVE);
+        polygon.setStyle(isActive ? STYLE_ACTIVE : STYLE_INACTIVE);
       });
       polygon.on('click', function(e) {
         L.DomEvent.stopPropagation(e);
         openPopup(distID, e.latlng, map);
       });
-
+ 
       allLayers.push(polygon);
     });
-
+ 
     if (allLayers.length > 0) {
       var group = L.featureGroup(allLayers);
       map.fitBounds(group.getBounds(), { padding: [32, 32] });
@@ -22107,7 +22109,7 @@
       showError('No district coordinates loaded yet. Paste coordinates into the DISTRICTS object.');
     }
   }
-
+ 
   var s = document.createElement('script');
   s.src    = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   s.onload = initMap;
