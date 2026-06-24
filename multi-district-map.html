@@ -22073,6 +22073,7 @@
     map.on('click', function() { closePopup(); });
  
     var allLayers = [];
+    var activeLayer = null;
  
     Object.keys(DISTRICTS).forEach(function(distID) {
       var coords = DISTRICTS[distID];
@@ -22096,12 +22097,16 @@
       });
  
       allLayers.push(polygon);
+      if (isActive) activeLayer = polygon;
     });
  
-    if (allLayers.length > 0) {
+    // map-fitting on load - specifically highlighted district
+    if (activeLayer) {
+      map.fitBounds(activeLayer.getBounds(), { padding: [32, 32] });
+    } else if (allLayers.length > 0) {
       var group = L.featureGroup(allLayers);
       map.fitBounds(group.getBounds(), { padding: [32, 32] });
-    } else {
+    } else    {
       showError('No district coordinates loaded yet. Paste coordinates into the DISTRICTS object.');
     }
   }
